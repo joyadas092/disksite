@@ -49,12 +49,12 @@ def telegram_webhook(secret):
         abort(400)
     update = request.get_json(silent=True) or {}
     try:
-        from telegram_sync import bot_api_chat_matches, save_bot_api_message
-        message = update.get("channel_post")
-        if message and bot_api_chat_matches(message):
-            save_bot_api_message(message)
+        from telegram_sync import handle_bot_api_message
+        message = update.get("message")
+        if message:
+            handle_bot_api_message(message)
         else:
-            logging.debug("Webhook: ignored update (no matching channel_post)")
+            logging.debug("Webhook: ignored update (no message field)")
     except Exception as exc:
         logging.error("Webhook processing error: %s", exc)
     return "ok", 200
@@ -171,7 +171,7 @@ def _register_webhook(bot_token):
     url = f"{WEBHOOK_URL}/webhook/{WEBHOOK_SECRET}"
     data = json.dumps({
         "url": url,
-        "allowed_updates": ["channel_post"],
+        "allowed_updates": ["message"],
         "drop_pending_updates": False,
     }).encode()
     req = urllib.request.Request(
