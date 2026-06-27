@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: diskwala-gallery
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: FLASK_DEBUG
+        value: 0

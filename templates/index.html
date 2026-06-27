@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Diskwala Links — Free Videos &amp; Images | diskwala.fun</title>
+    <meta name="description" content="diskwala.fun — browse the latest free Diskwala video and image links updated daily from Telegram. Watch Diskwala content instantly without the app.">
+    <meta name="keywords" content="diskwala, diskwala links, diskwala free, diskwala videos, diskwala app, diskwala gallery">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://diskwala.fun/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Diskwala Links — Free Videos &amp; Images | diskwala.fun">
+    <meta property="og:description" content="Browse the latest free Diskwala video and image links updated daily.">
+    <meta property="og:url" content="https://diskwala.fun/">
+    <meta property="og:site_name" content="diskwala.fun">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Diskwala Links — diskwala.fun">
+    <meta name="twitter:description" content="Free Diskwala video and image links updated daily.">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"WebSite","name":"diskwala.fun","url":"https://diskwala.fun","description":"Free Diskwala video and image links updated daily from Telegram.","potentialAction":{"@type":"SearchAction","target":"https://diskwala.fun/?q={search_term_string}","query-input":"required name=search_term_string"}}
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Telegram join bar -->
+    <div class="tg-bar">
+        <strong>Get new links first</strong>
+        <span class="d-none d-sm-inline">— join our Telegram channel</span>
+        <a class="btn-tg-join" href="https://t.me/Viral_diskwala_bot" target="_blank" rel="noopener noreferrer">
+            <svg class="tg-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.537-.194 1.006.131.833.94z"/>
+            </svg>
+            Join Now
+        </a>
+    </div>
+
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid px-3 px-lg-4">
+                <a class="navbar-brand" href="/"><span>disk</span>wala.fun</a>
+
+                <a class="btn btn-install d-lg-none" href="{{ url_for('install_app') }}">Install App</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse gap-3" id="topNav">
+                    <div class="sort-actions ms-lg-auto" role="group" aria-label="Sort posts">
+                        <button class="btn btn-sort active" data-sort="latest" type="button">Latest</button>
+                        <button class="btn btn-sort" data-sort="oldest" type="button">Oldest</button>
+                        <button class="btn btn-sort" data-sort="random" type="button">Random</button>
+                        <button class="btn btn-sort" data-sort="most_viewed" type="button">Most Viewed</button>
+                    </div>
+                    <a class="btn btn-install d-none d-lg-inline-flex" href="{{ url_for('install_app') }}">Install Diskwala App</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container-fluid px-3 px-lg-4 py-4">
+        <section id="postsGrid" class="posts-grid" aria-live="polite"></section>
+        <div id="loadingState" class="loading-state">Loading posts...</div>
+        <div id="emptyState" class="empty-state d-none">No Diskwala links found.</div>
+        <div id="scrollSentinel" class="scroll-sentinel"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

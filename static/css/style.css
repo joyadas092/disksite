@@ -1,0 +1,287 @@
+:root {
+    --bg: #080c14;
+    --bg2: #0d1220;
+    --panel: #111827;
+    --panel-soft: #1a2236;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --line: rgba(255,255,255,0.08);
+    --red: #e63946;
+    --red-dark: #c1121f;
+    --red-glow: rgba(230,57,70,0.18);
+    --blue: #2563eb;
+    --blue-light: #3b82f6;
+    --blue-glow: rgba(37,99,235,0.18);
+    --warm: #f59e0b;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(ellipse at top left, rgba(37,99,235,0.12), transparent 40%),
+        radial-gradient(ellipse at bottom right, rgba(230,57,70,0.1), transparent 40%),
+        var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ── Telegram Join Bar ── */
+.tg-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.55rem 1rem;
+    background: linear-gradient(90deg, #1a1f2e, #0d1525, #1a1f2e);
+    border-bottom: 1px solid rgba(37,99,235,0.3);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+    flex-wrap: wrap;
+}
+
+.tg-bar strong { color: var(--text); }
+
+.btn-tg-join {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.9rem;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 150ms;
+    white-space: nowrap;
+}
+
+.btn-tg-join:hover { background: var(--blue-light); color: #fff; }
+
+.tg-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: #fff;
+}
+
+/* ── Header ── */
+.site-header {
+    background: rgba(8,12,20,0.95);
+    border-bottom: 1px solid rgba(230,57,70,0.25);
+    backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-brand {
+    color: var(--text);
+    font-weight: 900;
+    font-size: 1.2rem;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+}
+
+.navbar-brand span { color: var(--red); }
+
+.navbar-brand:hover { color: var(--text); }
+
+.navbar-toggler {
+    border-color: var(--line);
+}
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.15rem rgba(230,57,70,0.3);
+}
+.navbar-toggler-icon { filter: invert(1) grayscale(1); }
+
+/* ── Sort buttons ── */
+.sort-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.btn-sort {
+    min-height: 2.4rem;
+    padding: 0 1rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    transition: all 140ms;
+}
+
+.btn-sort:hover {
+    color: var(--text);
+    border-color: rgba(230,57,70,0.4);
+    background: var(--panel-soft);
+}
+
+.btn-sort.active {
+    color: #fff;
+    border-color: var(--red);
+    background: var(--red);
+}
+
+/* ── Install button ── */
+.btn-install {
+    min-height: 2.4rem;
+    padding: 0 1.1rem;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border: 1px solid var(--blue);
+    background: var(--blue);
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: background 140ms;
+}
+.btn-install:hover { background: var(--blue-light); color: #fff; border-color: var(--blue-light); }
+
+/* ── Grid ── */
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+}
+
+/* ── Card ── */
+.post-card {
+    overflow: hidden;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.post-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(230,57,70,0.4);
+    box-shadow: 0 8px 24px rgba(230,57,70,0.12);
+}
+
+/* ── Thumbnail — 16:9, image fills exactly ── */
+.thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: linear-gradient(135deg, #111827, #080c14);
+}
+
+.thumb-wrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.thumb-placeholder {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: var(--muted);
+    font-weight: 800;
+    font-size: 0.75rem;
+}
+
+/* Views pill only — media type pill removed */
+.views-pill {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.2rem 0.45rem;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+}
+
+/* ── Card body ── */
+.post-body {
+    padding: 0.55rem;
+}
+
+.link-actions {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.btn-watch {
+    width: 100%;
+    min-height: 2.1rem;
+    color: #fff;
+    background: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 140ms;
+}
+
+.btn-watch:hover { color: #fff; background: #c1121f; border-color: #c1121f; }
+
+.btn-share {
+    width: 100%;
+    min-height: 1.9rem;
+    margin-top: 0.3rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 140ms;
+}
+
+.btn-share:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: var(--panel-soft); }
+
+/* ── States ── */
+.loading-state,
+.empty-state {
+    padding: 2.5rem 1rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+.scroll-sentinel { height: 1px; }
+
+/* ── Tablet ── */
+@media (max-width: 991.98px) {
+    .navbar-collapse { padding-top: 1rem; }
+    .sort-actions, .sort-actions .btn-sort { width: 100%; }
+    .sort-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ── Mobile: exactly 2 columns ── */
+@media (max-width: 600px) {
+    .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+}
