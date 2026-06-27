@@ -1,3 +1,5 @@
+import json
+import logging
 import os
 import threading
 import urllib.request
@@ -13,12 +15,19 @@ from database import delete_post, get_post, get_posts, increment_views, init_db
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", os.path.join(BASE_DIR, "uploads"))
 
+# Webhook mode: set WEBHOOK_URL=https://diskwala.fun on Render.
+# Leave unset locally to keep using polling.
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "").strip().rstrip("/")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "dw_hook_secret_9a2f")
+
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 init_db()
 
+
+# ── Pages ────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -29,6 +38,29 @@ def index():
         desktop_url=os.getenv("DISKWALA_DESKTOP_URL", "https://diskwala.com/download"),
     )
 
+
+# ── Telegram webhook (Render / production) ───────────────────────────────────
+
+@app.route("/webhook/<secret>", methods=["POST"])
+def telegram_webhook(secret):
+    if secret != WEBHOOK_SECRET:
+        abort(403)
+    if not request.is_json:
+        abort(400)
+    update = request.get_json(silent=True) or {}
+    try:
+        from telegram_sync import bot_api_chat_matches, save_bot_api_message
+        message = update.get("channel_post")
+        if message and bot_api_chat_matches(message):
+            save_bot_api_message(message)
+        else:
+            logging.debug("Webhook: ignored update (no matching channel_post)")
+    except Exception as exc:
+        logging.error("Webhook processing error: %s", exc)
+    return "ok", 200
+
+
+# ── API ──────────────────────────────────────────────────────────────────────
 
 @app.route("/api/posts")
 def api_posts():
@@ -41,13 +73,7 @@ def api_posts():
         sort = "latest"
 
     posts, has_more = get_posts(search=search, sort=sort, page=page, limit=limit)
-    return jsonify(
-        {
-            "posts": posts,
-            "has_more": has_more,
-            "next_page": page + 1,
-        }
-    )
+    return jsonify({"posts": posts, "has_more": has_more, "next_page": page + 1})
 
 
 @app.route("/go/<int:post_id>/<int:link_number>")
@@ -55,25 +81,20 @@ def go_to_diskwala(post_id, link_number):
     post = get_post(post_id)
     if not post:
         abort(404)
-
     links = post["links"]
     if link_number < 1 or link_number > len(links):
         abort(404)
-
     increment_views(post_id)
     return redirect(links[link_number - 1])
 
 
 @app.route("/install")
 def install_app():
-    user_agent = request.headers.get("User-Agent", "").lower()
-
-    if "android" in user_agent:
+    ua = request.headers.get("User-Agent", "").lower()
+    if "android" in ua:
         return redirect(os.getenv("DISKWALA_ANDROID_URL", "https://play.google.com/store"))
-
-    if "iphone" in user_agent or "ipad" in user_agent or "ipod" in user_agent:
+    if "iphone" in ua or "ipad" in ua or "ipod" in ua:
         return redirect(os.getenv("DISKWALA_IOS_URL", "https://www.apple.com/app-store/"))
-
     return redirect(os.getenv("DISKWALA_DESKTOP_URL", "https://diskwala.com/download"))
 
 
@@ -90,9 +111,11 @@ def admin_delete_post(post_id):
 def sitemap():
     base = os.getenv("SITE_URL", "https://diskwala.fun").rstrip("/")
     posts, _ = get_posts(sort="latest", page=1, limit=50)
-    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
-             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-             f'  <url><loc>{base}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>']
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        f'  <url><loc>{base}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>',
+    ]
     for p in posts:
         lines.append(f'  <url><loc>{base}/go/{p["id"]}/1</loc><lastmod>{p["created_at"][:10]}</lastmod><priority>0.8</priority></url>')
     lines.append("</urlset>")
@@ -102,11 +125,15 @@ def sitemap():
 @app.route("/robots.txt")
 def robots():
     base = os.getenv("SITE_URL", "https://diskwala.fun")
-    body = f"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nSitemap: {base}/sitemap.xml\n"
-    return Response(body, mimetype="text/plain")
+    return Response(
+        f"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nSitemap: {base}/sitemap.xml\n",
+        mimetype="text/plain",
+    )
 
 
-_thumb_cache = {}  # file_id -> (content_type, bytes)
+# ── Thumbnail proxy ───────────────────────────────────────────────────────────
+
+_thumb_cache = {}
 
 @app.route("/thumb/<path:file_id>")
 def proxy_thumbnail(file_id):
@@ -120,8 +147,7 @@ def proxy_thumbnail(file_id):
     try:
         info_url = f"https://api.telegram.org/bot{bot_token}/getFile?file_id={file_id}"
         with urllib.request.urlopen(info_url, timeout=10) as r:
-            import json as _json
-            info = _json.loads(r.read())
+            info = json.loads(r.read())
         file_path = info["result"]["file_path"]
         img_url = f"https://api.telegram.org/file/bot{bot_token}/{file_path}"
         with urllib.request.urlopen(img_url, timeout=10) as r:
@@ -139,23 +165,69 @@ def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
+# ── Startup: webhook (Render) or polling (local) ─────────────────────────────
+
+def _register_webhook(bot_token):
+    url = f"{WEBHOOK_URL}/webhook/{WEBHOOK_SECRET}"
+    data = json.dumps({
+        "url": url,
+        "allowed_updates": ["channel_post"],
+        "drop_pending_updates": False,
+    }).encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{bot_token}/setWebhook",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=15) as r:
+        result = json.loads(r.read())
+    logging.info("Telegram webhook registered → %s | result: %s", url, result)
+
+
+def _delete_webhook(bot_token):
+    """Remove any webhook so polling works cleanly."""
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{bot_token}/deleteWebhook",
+        data=b"{}",
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            result = json.loads(r.read())
+        logging.info("Telegram webhook deleted: %s", result)
+    except Exception as exc:
+        logging.warning("Could not delete webhook: %s", exc)
+
+
 def _start_telegram_sync():
-    """Launch telegram_sync in a background daemon thread (bot-API mode only).
-    Only runs in the actual worker process, not the Flask reloader parent."""
     bot_token = os.getenv("BOT_TOKEN", "").strip()
     if not bot_token:
         return
-    # When Flask debug reloader is active it spawns a child with WERKZEUG_RUN_MAIN=true.
-    # We must skip the parent process so only one poller runs.
+
+    if WEBHOOK_URL:
+        # Production (Render): register webhook, no polling thread needed
+        try:
+            _register_webhook(bot_token)
+        except Exception as exc:
+            logging.error("Failed to register webhook: %s", exc)
+        return
+
+    # Local development: polling mode
+    # Skip the reloader parent process to avoid two pollers
     debug_mode = os.getenv("FLASK_DEBUG") == "1"
     if debug_mode and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         return
+
+    # Remove any stale webhook so polling works
+    _delete_webhook(bot_token)
+
     try:
         from telegram_sync import run_bot_api_sync
         t = threading.Thread(target=run_bot_api_sync, daemon=True, name="telegram-sync")
         t.start()
     except Exception as exc:
-        import logging
         logging.error("Could not start telegram sync thread: %s", exc)
 
 
