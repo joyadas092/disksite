@@ -320,13 +320,13 @@ def get_posts(search="", sort="latest", page=1, limit=20):
         params.append(fts_query)
 
     if sort == "oldest":
-        order_sql = "ORDER BY posts.created_at ASC, posts.id ASC"
+        order_sql = "ORDER BY posts.id ASC"
     elif sort == "most_viewed":
         order_sql = "ORDER BY COALESCE(views.count, 0) DESC, posts.id DESC"
     elif sort == "random" and not search:
         return _get_random_posts(limit)
-    else:
-        order_sql = "ORDER BY posts.created_at DESC, posts.id DESC"
+    else:  # latest
+        order_sql = "ORDER BY posts.id DESC"
 
     query = f"""
         SELECT posts.*, COALESCE(views.count, 0) AS views
